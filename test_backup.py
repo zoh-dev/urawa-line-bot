@@ -81,13 +81,13 @@ def handle_message(event):
 
     else:
         with open("user_id.txt", "r", encoding="utf-8") as f:
-            saved_ids = f.read()
+            saved_ids = f.read().splitlines()
 
-    if event.source.user_id not in saved_ids:
-        with open("user_id.txt", "a", encoding="utf-8") as f:
-            f.write(event.source.user_id + "\n")
+        if event.source.user_id not in saved_ids:
+            with open("user_id.txt", "a", encoding="utf-8") as f:
+                f.write(event.source.user_id + "\n")
 
-        reply_text = "浦和レッズ通知BOTです！\n「次の試合」と送ると試合情報を表示します。"
+        reply_text = "浦和レッズ通知BOTです⚽\n「次の試合」と送ると試合情報を表示します。"
 
     with ApiClient(configuration) as api_client:
         line_bot_api = MessagingApi(api_client)
