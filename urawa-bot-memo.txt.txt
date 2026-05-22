@@ -1,0 +1,3 @@
+アカウント名: 浦和レッズ通知bot
+ベーシックID: @234jbbzy
+フォルダ: urawa-line-bot
