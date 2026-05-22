@@ -66,7 +66,7 @@ def handle_message(event):
 
         found = False
         for line in lines:
-            date, weekday, match_time, opponent, place = first_line.split(",")
+            date, weekday, match_time, opponent, place = line.strip().split(",")
             if date == today:
                 reply_text = f"""今日は試合があります
 対戦相手：{opponent}
