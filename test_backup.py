@@ -1,3 +1,4 @@
+import os
 import requests
 from bs4 import BeautifulSoup
 import re
@@ -13,9 +14,9 @@ from linebot.v3.exceptions import InvalidSignatureError
 
 app = Flask(__name__)
 
-# ここに自分の情報を入れる
-CHANNEL_ACCESS_TOKEN = "jUiJ/e8soKu5g7MEB0yfJLz/lwM2gTKdBuE1OUeC5HEz70bGX6OhWj0w+nAC98izYLmWCt0ZZdbwmRTqeq7cnuDrw4HsGr5sIocthMnHD+xe++0PtOQ+g3TG3NShib66pr04AWCv+AIGZ7AjuRR18QdB04t89/1O/w1cDnyilFU="
-CHANNEL_SECRET = "3e49200aeb045a4d8fae30677f81aad3"
+
+CHANNEL_ACCESS_TOKEN = os.environ["CHANNEL_ACCESS_TOKEN"]
+CHANNEL_SECRET = os.environ["CHANNEL_SECRET"]
 
 configuration = Configuration(access_token=CHANNEL_ACCESS_TOKEN)
 handler = WebhookHandler(CHANNEL_SECRET)
@@ -47,11 +48,12 @@ def handle_message(event):
 
         if lines:
             first_line = lines[0].strip()
-            date, opponent, place = first_line.split(",")
+            date, weekday, match_time, opponent, place = first_line.split(",")
 
             reply_text = f"""次の試合情報
 対戦相手：{opponent}
-日時：{date}
+日付：{date}（{weekday}）
+試合時間：{match_time}
 場所：{place}"""
         else:
             reply_text = "試合情報が取得できませんでした"
@@ -64,10 +66,12 @@ def handle_message(event):
 
         found = False
         for line in lines:
-            date, opponent, place = line.strip().split(",")
+            date, weekday, match_time, opponent, place = first_line.split(",")
             if date == today:
                 reply_text = f"""今日は試合があります
 対戦相手：{opponent}
+日付：{date}（{weekday}）
+試合時間：{match_time}
 場所：{place}"""
                 found = True
                 break
@@ -76,6 +80,10 @@ def handle_message(event):
             reply_text = "今日は試合ありません"
 
     else:
+        with open("user_id.txt", "r", encoding="utf-8") as f:
+            saved_ids = f.read()
+
+    if event.source.user_id not in saved_ids:
         with open("user_id.txt", "a", encoding="utf-8") as f:
             f.write(event.source.user_id + "\n")
 
@@ -93,7 +101,7 @@ def handle_message(event):
 def send_daily_notice():
     print("通知関数スタート")
 
-    tomorrow = (datetime.today() + timedelta(days=2)).strftime("%Y/%m/%d")
+    tomorrow = (datetime.today() + timedelta(days=1)).strftime("%Y/%m/%d")
 
     with open("user_id.txt", "r", encoding="utf-8") as f:
         user_ids = f.readlines()
@@ -102,13 +110,14 @@ def send_daily_notice():
         lines = f.readlines()
 
     for line in lines:
-        date, opponent, place = line.strip().split(",")
+        date, weekday, match_time, opponent, place = line.strip().split(",")
 
         if date == tomorrow:
             message = f"""明日は浦和レッズ試合です！
 対戦相手：{opponent}
-場所：{place}
-日付：{date}"""
+日時：{date}（{weekday}）
+試合時間：{match_time}
+場所：{place}"""
 
             for user_id in user_ids:
                 user_id = user_id.strip()
@@ -135,8 +144,6 @@ if __name__ == "__main__":
 
     thread = threading.Thread(target=lambda: app.run(port=5000))
     thread.start()
-
-    send_daily_notice()
 
     while True:
         schedule.run_pending()
