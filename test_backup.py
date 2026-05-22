@@ -76,8 +76,8 @@ def handle_message(event):
             reply_text = "今日は試合ありません"
 
     else:
-        with open("user_id.txt", "w", encoding="utf-8") as f:
-            f.write(event.source.user_id)
+        with open("user_id.txt", "a", encoding="utf-8") as f:
+            f.write(event.source.user_id + "\n")
 
         reply_text = "浦和レッズ通知BOTです！\n「次の試合」と送ると試合情報を表示します。"
 
@@ -92,10 +92,11 @@ def handle_message(event):
 
 def send_daily_notice():
     print("通知関数スタート")
+
     tomorrow = (datetime.today() + timedelta(days=2)).strftime("%Y/%m/%d")
 
     with open("user_id.txt", "r", encoding="utf-8") as f:
-        user_id = f.read().strip()
+        user_ids = f.readlines()
 
     with open("match_data.txt", "r", encoding="utf-8") as f:
         lines = f.readlines()
@@ -109,18 +110,22 @@ def send_daily_notice():
 場所：{place}
 日付：{date}"""
 
-            with ApiClient(configuration) as api_client:
-                line_bot_api = MessagingApi(api_client)
-                line_bot_api.push_message(
-                    PushMessageRequest(
-                        to=user_id,
-                        messages=[TextMessage(text=message)]
+            for user_id in user_ids:
+                user_id = user_id.strip()
+
+                with ApiClient(configuration) as api_client:
+                    line_bot_api = MessagingApi(api_client)
+
+                    line_bot_api.push_message(
+                        PushMessageRequest(
+                            to=user_id,
+                            messages=[TextMessage(text=message)]
+                        )
                     )
-                )
 
-            print("LINE通知送信完了")
+                print(f"{user_id} に通知送信完了")
+
             break
-
 
 schedule.every().day.at("22:30").do(send_daily_notice)
 
