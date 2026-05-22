@@ -87,7 +87,13 @@ def handle_message(event):
             with open("user_id.txt", "a", encoding="utf-8") as f:
                 f.write(event.source.user_id + "\n")
 
-        reply_text = "浦和レッズ通知BOTです⚽\n「次の試合」と送ると試合情報を表示します。"
+        reply_text = f"""浦和レッズ通知BOTです⚽
+
+        「次の試合」
+        → 次回試合情報
+
+        「今日試合」
+        → 今日の試合確認"""
 
     with ApiClient(configuration) as api_client:
         line_bot_api = MessagingApi(api_client)
